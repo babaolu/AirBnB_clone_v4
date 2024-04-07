@@ -1,6 +1,7 @@
 $(document).ready(function () {
   const selectedAmenities = {};
-  const selectedStatesandCities = {};
+  const selectedStates = {};
+  const selectedCities = {};
 
   $('ul.service li input[type="checkbox"]').change(function () {
     const amenityId = $(this).data('id');
@@ -18,22 +19,38 @@ $(document).ready(function () {
     $('h4#AmenityList').text(amenityNames);
   });
 
-  $('ul.locality li input[type="checkbox"]').change(function () {
-    const stateOrcityId = $(this).data('id');
-    const stateOrcityName = $(this).data('name');
+  $('ul.cities li input[type="checkbox"]').change(function () {
+    const cityId = $(this).data('id');
+    const cityName = $(this).data('name');
 
     if ($(this).is(':checked')) {
-      selectedStatesandCities[stateOrcityId] = stateOrcityName;
+      selectedCities[cityId] = cityName;
     } else {
-      delete selectedStatesandCities[stateOrcityId];
+      delete selectedCities[cityId];
     }
-    let stateAndcityNames = Object.values(selectedStatesandCities).join(', ');
-    if (stateAndcityNames.length > 25) {
-      stateAndcityNames = stateAndcityNames.slice(0, 24) + '...';
-    }
-    $('h4#StateandCityList').text(stateAndcityNames);
+    updateLocationDisplay();
   });
 
+  $('ul.states li input[type="checkbox"]').change(function () {
+    const stateId = $(this).data('id');
+    const stateName = $(this).data('name');
+
+    if ($(this).is(':checked')) {
+      selectedStates[stateId] = stateName;
+    } else {
+      delete selectedStates[stateId];
+    }
+    updateLocationDisplay();
+  });
+
+  function updateLocationDisplay () {
+    let locNames = Object.values(selectedStates).join(', ') +
+                   ', ' + (Object.values(selectedCities)).join(', ');
+    if (locNames.length > 25) {
+      locNames = locNames.slice(0, 24) + '...';
+    }
+    $('h4#StateandCityList').text(locNames);
+  }
   $.ajax({
     type: 'GET',
     url: 'http://0.0.0.0:5001/api/v1/status/',
@@ -83,7 +100,11 @@ $(document).ready(function () {
     $.ajax({
       type: 'POST',
       url: 'http://0.0.0.0:5001/api/v1/places_search/',
-      data: JSON.stringify({ amenities: Object.keys(selectedAmenities) }),
+      data: JSON.stringify({
+        amenities: Object.keys(selectedAmenities),
+        states: Object.keys(selectedStates),
+        cities: Object.keys(selectedCities)
+      }),
       contentType: 'application/json',
       success: function (places) {
         fillPlace(places);
